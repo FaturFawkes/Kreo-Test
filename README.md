@@ -154,9 +154,50 @@ go run cmd/worker/main.go
 
 ## Rate Limits
 
-- **Authenticated Users**: 100 requests/minute
-- **Unauthenticated Users**: 10 requests/minute  
-- **Background Workers**: 80 requests/minute to Kalshi API
+The API implements a tiered rate limiting system using Redis for distributed rate limiting:
+
+### Rate Limit Tiers
+
+- **Authenticated Users**: 100 requests per minute
+  - Applied to users with valid JWT tokens
+  - Identified by user ID from token claims
+  
+- **Unauthenticated Users**: 10 requests per minute
+  - Applied to requests without authentication
+  - Identified by client IP address
+  
+- **Background Workers**: 80 requests per minute
+  - Applied to internal background workers
+  - Used for cache warming and data synchronization
+
+### Rate Limit Headers
+
+All responses include the following headers:
+
+- `X-RateLimit-Limit`: Maximum requests allowed in the current window
+- `X-RateLimit-Remaining`: Number of requests remaining in the current window
+- `X-RateLimit-Reset`: Unix timestamp when the rate limit resets
+
+### Rate Limit Response
+
+When rate limit is exceeded, the API returns:
+
+```json
+{
+  "error": "rate_limit_exceeded",
+  "message": "Rate limit exceeded. Please try again later.",
+  "retry_after": 1736812800
+}
+```
+
+**Status Code**: `429 Too Many Requests`
+
+### Implementation Details
+
+- **Window**: All tiers use a sliding 1-minute window
+- **Storage**: Rate limits are stored in Redis with automatic expiration
+- **Atomic Operations**: Uses Redis atomic increment operations to prevent race conditions
+- **Fallback**: On Redis failure, requests are allowed to ensure availability over strict limiting
 
 ## License
 

@@ -8,8 +8,8 @@ import (
 	"upwork-test/internal/delivery/http/handler"
 	"upwork-test/internal/delivery/http/middleware"
 	"upwork-test/internal/domain/auth/service"
-	"upwork-test/internal/infrastructure/config"
 	ratelimitservice "upwork-test/internal/domain/ratelimit/service"
+	"upwork-test/internal/infrastructure/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -72,7 +72,7 @@ func NewServer(
 func (s *Server) setupMiddleware() {
 	s.router.Use(gin.Recovery())
 	s.router.Use(middleware.Logging())
-	s.router.Use(middleware.RateLimitMiddleware(s.rateLimiter))
+	s.router.Use(middleware.RateLimitMiddleware(s.rateLimiter, s.tokenService))
 	s.router.Use(middleware.ErrorHandler())
 
 }
@@ -99,7 +99,6 @@ func (s *Server) setupRoutes() {
 			categoryHandler := handler.NewCategoryHandler(s.getCategoryOverviewUseCase)
 			categories.GET("/:category/overview", categoryHandler.GetOverview)
 		}
-
 
 		// Protected market detail endpoint
 		markets := v1.Group("/markets")
