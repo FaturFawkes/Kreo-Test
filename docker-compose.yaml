@@ -24,70 +24,70 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # api:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #     target: ${BUILD_TARGET:-}
-  #   image: kalshi-api:${VERSION:-latest}
-  #   container_name: kalshi-api
-  #   ports:
-  #     - "${API_PORT:-8080}:8080"
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - REDIS_HOST=redis
-  #     - REDIS_PORT=6379
-  #     - GIN_MODE=${GIN_MODE:-release}
-  #   restart: unless-stopped
-  #   networks:
-  #     - kalshi-network
-  #   logging:
-  #     driver: "json-file"
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "3"
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         cpus: "1"
-  #         memory: 512M
-  #       reservations:
-  #         cpus: "0.5"
-  #         memory: 256M
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${BUILD_TARGET:-}
+    image: kalshi-api:${VERSION:-latest}
+    container_name: kalshi-api
+    ports:
+      - "${API_PORT:-8080}:8080"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - GIN_MODE=${GIN_MODE:-release}
+    restart: unless-stopped
+    networks:
+      - kalshi-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
 
-  # worker:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #     target: ${BUILD_TARGET:-}
-  #   image: kalshi-worker:${VERSION:-latest}
-  #   container_name: kalshi-worker
-  #   command: ["./worker"]
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - REDIS_HOST=redis
-  #     - REDIS_PORT=6379
-  #   depends_on:
-  #     redis:
-  #       condition: service_healthy
-  #   restart: unless-stopped
-  #   networks:
-  #     - kalshi-network
-  #   logging:
-  #     driver: "json-file"
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "3"
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         cpus: "0.5"
-  #         memory: 256M
-  #       reservations:
-  #         cpus: "0.25"
-  #         memory: 128M
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${BUILD_TARGET:-}
+    image: kalshi-worker:${VERSION:-latest}
+    container_name: kalshi-worker
+    command: ["./worker"]
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - kalshi-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
 
 volumes:
   redis_data:
