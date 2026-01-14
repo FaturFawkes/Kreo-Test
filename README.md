@@ -22,7 +22,7 @@ The system follows Domain-Driven Design with these bounded contexts:
 
 ### Technology Stack
 
-- **Language**: Go 1.21+
+- **Language**: Go 1.25+
 - **Framework**: Gin for HTTP routing
 - **Cache**: Redis 7+ for caching and rate limiting
 - **Authentication**: JWT with 24-hour token expiration
