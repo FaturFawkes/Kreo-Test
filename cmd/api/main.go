@@ -8,12 +8,17 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-
-	"honnef.co/go/tools/config"
+	"upwork-test/internal/application/usecase"
+	httpserver "upwork-test/internal/delivery/http"
+	"upwork-test/internal/domain/auth/service"
+	ratelimitservice "upwork-test/internal/domain/ratelimit/service"
+	"upwork-test/internal/infrastructure/cache"
+	"upwork-test/internal/infrastructure/config"
+	"upwork-test/internal/infrastructure/kalshi"
+	"upwork-test/internal/infrastructure/ratelimit"
 )
 
 func main() {
-	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
 		fmt.Printf("Failed to load configuration: %v\n", err)
@@ -23,7 +28,6 @@ func main() {
 	fmt.Printf("Starting Kalshi Aggregation API on port %s (mode: %s)\n",
 		cfg.Server.Port, cfg.Server.GinMode)
 
-	// Initialize Redis client
 	redisClient, err := cache.NewRedisClient(
 		cfg.Redis.Addr(),
 		cfg.Redis.Password,
@@ -37,32 +41,29 @@ func main() {
 
 	fmt.Printf("Connected to Redis at %s\n", cfg.Redis.Addr())
 
-	// Create token service
 	tokenService := service.NewTokenService(cfg.JWT.Secret, cfg.JWT.Expiration)
 	fmt.Printf("Token service initialized (expiration: %s)\n", cfg.JWT.Expiration.String())
 
-	// Create rate limiter
 	rateLimitRepo := ratelimit.NewRedisRateLimiter(redisClient)
 	rateLimiter := ratelimitservice.NewRateLimiter(rateLimitRepo)
 	fmt.Println("Rate limiter initialized")
 
-	// Create Kalshi API client
 	kalshiClient := kalshi.NewClient(cfg.Kalshi.BaseURL, cfg.Kalshi.APIKey)
 	fmt.Println("Kalshi API client initialized")
 
-	// Create market repository
 	marketRepo := cache.NewMarketRepository(redisClient, kalshiClient)
 	fmt.Println("Market repository initialized")
 
-	// Create use cases
+	categoryRepo := cache.NewCategoryRepository(redisClient, kalshiClient, marketRepo)
+	fmt.Println("Category repository initialized")
+
 	listMarketsUseCase := usecase.NewListMarkets(marketRepo)
 	getMarketDetailsUseCase := usecase.NewGetMarketDetails(marketRepo)
+	getCategoryOverviewUseCase := usecase.NewGetCategoryOverview(categoryRepo)
 	fmt.Println("Use cases initialized")
 
-	// Create HTTP server
-	server := httpserver.NewServer(cfg, redisClient, tokenService, rateLimiter, listMarketsUseCase, getMarketDetailsUseCase)
+	server := httpserver.NewServer(cfg, redisClient, tokenService, rateLimiter, listMarketsUseCase, getMarketDetailsUseCase, getCategoryOverviewUseCase)
 
-	// Start server in goroutine
 	go func() {
 		if err := server.Start(); err != nil && err != http.ErrServerClosed {
 			fmt.Printf("Server failed to start: %v\n", err)
@@ -70,15 +71,13 @@ func main() {
 		}
 	}()
 
-	// Wait for interrupt signal for graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
 	fmt.Println("Received shutdown signal")
 
-	// Graceful shutdown with 30 second timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {

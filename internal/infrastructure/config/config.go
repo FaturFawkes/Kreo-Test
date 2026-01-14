@@ -73,9 +73,9 @@ func Load() (*Config, error) {
 		Server: ServerConfig{
 			Port:         getEnv("PORT", "8080"),
 			GinMode:      getEnv("GIN_MODE", "release"),
-			ReadTimeout:  15 * time.Second,
-			WriteTimeout: 15 * time.Second,
-			IdleTimeout:  60 * time.Second,
+			ReadTimeout:  60 * time.Second,
+			WriteTimeout: 60 * time.Second,
+			IdleTimeout:  120 * time.Second,
 		},
 		Redis: RedisConfig{
 			Host:     getEnv("REDIS_HOST", "localhost"),
@@ -84,11 +84,11 @@ func Load() (*Config, error) {
 			DB:       getEnvInt("REDIS_DB", 0),
 		},
 		Kalshi: KalshiConfig{
-			BaseURL: getEnv("KALSHI_API_BASE_URL", "https://api.kalshi.com"),
-			APIKey:  getEnv("KALSHI_API_KEY", ""),
+			BaseURL: getEnv("KALSHI_API_BASE_URL", "https://api.elections.kalshi.com"),
+			APIKey:  getEnv("KALSHI_API_KEY", "kalshi"),
 		},
 		JWT: JWTConfig{
-			Secret:     getEnv("JWT_SECRET", ""),
+			Secret:     getEnv("JWT_SECRET", "secret"),
 			Expiration: time.Duration(getEnvInt("JWT_EXPIRATION_HOURS", 24)) * time.Hour,
 		},
 		RateLimit: RateLimitConfig{
