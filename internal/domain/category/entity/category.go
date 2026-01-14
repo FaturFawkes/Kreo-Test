@@ -14,11 +14,11 @@ var (
 
 // Category represents a logical grouping of markets
 type Category struct {
-	Name        valueobject.CategoryName
-	DisplayName string
-	Description string
-	MarketCount int
-	LastUpdated time.Time
+	Name        valueobject.CategoryName `json:"name"`
+	DisplayName string                   `json:"display_name"`
+	Description string                   `json:"description"`
+	MarketCount int                      `json:"market_count"`
+	LastUpdated time.Time                `json:"last_updated"`
 }
 
 // NewCategory creates a new Category entity

@@ -38,3 +38,19 @@ func (t Ticker) Equals(other Ticker) bool {
 func (t Ticker) IsEmpty() bool {
 	return t.value == ""
 }
+
+// MarshalJSON implements json.Marshaler
+func (t Ticker) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + t.value + `"`), nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (t *Ticker) UnmarshalJSON(data []byte) error {
+	if len(data) < 2 {
+		return ErrInvalidTicker
+	}
+	// Remove quotes
+	value := string(data[1 : len(data)-1])
+	t.value = value
+	return nil
+}

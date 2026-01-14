@@ -16,21 +16,21 @@ const (
 
 // Market represents a prediction market
 type Market struct {
-	Ticker      valueobject.Ticker
-	Title       string
-	Category    string
-	OpenTime    time.Time
-	CloseTime   time.Time
-	Status      MarketStatus
-	YesAsk      valueobject.Price
-	YesBid      valueobject.Price
-	NoAsk       valueobject.Price
-	NoBid       valueobject.Price
-	LastPrice   valueobject.Price
-	Volume      int64
-	Volume24h   int64
-	Liquidity   int64
-	LastUpdated time.Time
+	Ticker      valueobject.Ticker `json:"ticker"`
+	Title       string             `json:"title"`
+	Category    string             `json:"category"`
+	OpenTime    time.Time          `json:"open_time"`
+	CloseTime   time.Time          `json:"close_time"`
+	Status      MarketStatus       `json:"status"`
+	YesAsk      valueobject.Price  `json:"yes_ask"`
+	YesBid      valueobject.Price  `json:"yes_bid"`
+	NoAsk       valueobject.Price  `json:"no_ask"`
+	NoBid       valueobject.Price  `json:"no_bid"`
+	LastPrice   valueobject.Price  `json:"last_price"`
+	Volume      int64              `json:"volume"`
+	Volume24h   int64              `json:"volume_24h"`
+	Liquidity   int64              `json:"liquidity"`
+	LastUpdated time.Time          `json:"last_updated"`
 }
 
 // NewMarket creates a new Market entity

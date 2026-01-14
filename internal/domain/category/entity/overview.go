@@ -22,13 +22,13 @@ var (
 
 // CategoryOverview represents pre-computed aggregate metrics for a category
 type CategoryOverview struct {
-	CategoryName     valueobject.CategoryName
-	TotalMarkets     int
-	TotalVolume24h   int64
-	AverageLiquidity float64
-	ActiveTraders24h int
-	ComputedAt       time.Time
-	ExpiresAt        time.Time
+	CategoryName     valueobject.CategoryName `json:"category_name"`
+	TotalMarkets     int                      `json:"total_markets"`
+	TotalVolume24h   int64                    `json:"total_volume_24h"`
+	AverageLiquidity float64                  `json:"average_liquidity"`
+	ActiveTraders24h int                      `json:"active_traders_24h"`
+	ComputedAt       time.Time                `json:"computed_at"`
+	ExpiresAt        time.Time                `json:"expires_at"`
 }
 
 // NewCategoryOverview creates a new CategoryOverview entity

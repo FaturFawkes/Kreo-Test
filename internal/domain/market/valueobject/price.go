@@ -49,6 +49,21 @@ func (p Price) Equals(other Price) bool {
 	return p.value == other.value
 }
 
+// MarshalJSON implements json.Marshaler
+func (p Price) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf("%d", p.value)), nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (p *Price) UnmarshalJSON(data []byte) error {
+	var value int64
+	if _, err := fmt.Sscanf(string(data), "%d", &value); err != nil {
+		return err
+	}
+	p.value = value
+	return nil
+}
+
 // GreaterThan checks if this price is greater than another
 func (p Price) GreaterThan(other Price) bool {
 	return p.value > other.value

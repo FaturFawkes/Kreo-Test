@@ -76,3 +76,19 @@ func AllCategories() []string {
 	}
 	return categories
 }
+
+// MarshalJSON implements json.Marshaler
+func (c CategoryName) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + c.value + `"`), nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (c *CategoryName) UnmarshalJSON(data []byte) error {
+	if len(data) < 2 {
+		return ErrInvalidCategoryName
+	}
+	// Remove quotes
+	value := string(data[1 : len(data)-1])
+	c.value = value
+	return nil
+}

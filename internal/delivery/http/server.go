@@ -95,7 +95,11 @@ func (s *Server) setupRoutes() {
 		{
 			marketHandler := handler.NewMarketHandler(s.listMarketsUseCase, s.getMarketDetailsUseCase)
 			categories.GET("/:category/markets", marketHandler.ListMarkets)
+
+			categoryHandler := handler.NewCategoryHandler(s.getCategoryOverviewUseCase)
+			categories.GET("/:category/overview", categoryHandler.GetOverview)
 		}
+
 
 		// Protected market detail endpoint
 		markets := v1.Group("/markets")
