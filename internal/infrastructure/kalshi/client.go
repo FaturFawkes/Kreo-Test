@@ -38,68 +38,54 @@ func NewClient(baseURL, apiKey string) *Client {
 
 // GetMarkets fetches markets filtered by category and status
 func (c *Client) GetMarkets(ctx context.Context, category string, status string) (*MarketListResponse, error) {
-	if category != "" {
-		// Step 1: Get series tickers for this category
-		seriesTickers, err := c.getSeriesTickersForCategory(ctx, category)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get series: %w", err)
-		}
-		
-		if len(seriesTickers) == 0 {
-			return &MarketListResponse{Markets: []MarketResponse{}}, nil
-		}
-		
-		// Step 2: Fetch markets for each series individually
-		// Note: Kalshi API doesn't support multiple series_ticker params in one call
-		// We'll fetch markets for each series (limited to first 50 series to avoid timeout)
-		upperCategory := strings.ToUpper(category)
-		
-		var allMarkets []MarketResponse
-		maxSeries := 10 // Limit to avoid timeout for categories with many series
-		if len(seriesTickers) > maxSeries {
-			seriesTickers = seriesTickers[:maxSeries]
-		}
-		
-		for _, seriesTicker := range seriesTickers {
-			url := fmt.Sprintf("%s/trade-api/v2/markets?series_ticker=%s&limit=100", c.baseURL, seriesTicker)
-			if status != "" {
-				url += fmt.Sprintf("&status=%s", status)
-			}
-			
-			var response MarketListResponse
-			if err := c.doRequest(ctx, "GET", url, nil, &response); err != nil {
-				// Log error but continue with other series
-				continue
-			}
-			
-			// Add markets from this series
-			for i := range response.Markets {
-				response.Markets[i].Category = upperCategory
-			}
-			allMarkets = append(allMarkets, response.Markets...)
-		}
-		
-		return &MarketListResponse{Markets: allMarkets}, nil
+	// Step 1: Get series tickers for this category
+	seriesTickers, err := c.getSeriesTickersForCategory(ctx, category)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get series: %w", err)
 	}
 	
-	// No category filter - fetch all markets
-	url := fmt.Sprintf("%s/trade-api/v2/markets?limit=1000", c.baseURL)
-	if status != "" {
-		url += fmt.Sprintf("&status=%s", status)
-	}
-	var response MarketListResponse
-	if err := c.doRequest(ctx, "GET", url, nil, &response); err != nil {
-		return nil, fmt.Errorf("failed to get markets: %w", err)
+	if len(seriesTickers) == 0 {
+		return &MarketListResponse{Markets: []MarketResponse{}}, nil
 	}
 	
-	return &response, nil
+	// Step 2: Fetch markets for each series individually
+	// Note: Kalshi API doesn't support multiple series_ticker params in one call
+	// We'll fetch markets for each series (limited to first 50 series to avoid timeout)
+	upperCategory := strings.ToUpper(category)
+	
+	var allMarkets []MarketResponse
+	maxSeries := 10 // Limit to avoid timeout for categories with many series
+	if len(seriesTickers) > maxSeries {
+		seriesTickers = seriesTickers[:maxSeries]
+	}
+	
+	for _, seriesTicker := range seriesTickers {
+		url := fmt.Sprintf("%s/trade-api/v2/markets?series_ticker=%s&limit=1", c.baseURL, seriesTicker)
+		if status != "" {
+			url += fmt.Sprintf("&status=%s", status)
+		}
+		
+		var response MarketListResponse
+		if err := c.doRequest(ctx, "GET", url, nil, &response); err != nil {
+			// Log error but continue with other series
+			continue
+		}
+		
+		// Add markets from this series
+		for i := range response.Markets {
+			response.Markets[i].Category = upperCategory
+		}
+		allMarkets = append(allMarkets, response.Markets...)
+	}	
+	
+	return &MarketListResponse{Markets: allMarkets}, nil
 }
 
 // getSeriesTickersForCategory fetches series and returns tickers for the given category
 func (c *Client) getSeriesTickersForCategory(ctx context.Context, category string) ([]string, error) {
 	// Fetch series with smaller limit to avoid timeout
 	// The /series endpoint is slow; limiting to 500 keeps response time reasonable
-	url := fmt.Sprintf("%s/trade-api/v2/series?limit=500", c.baseURL)
+	url := fmt.Sprintf("%s/trade-api/v2/series?category=%s", c.baseURL, category)
 	
 	var response SeriesListResponse
 	if err := c.doRequest(ctx, "GET", url, nil, &response); err != nil {
